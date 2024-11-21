@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Chat</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/uuid/8.3.2/uuid.min.js"></script>
+    <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.7.2.0.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        #chat-container {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .message.own {
+            background: #e3f2fd;
+            margin-left: 20%;
+        }
+        .message.other {
+            background: #f5f5f5;
+            margin-right: 20%;
+        }
+        .user-id {
+            font-size: 0.8em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .timestamp {
+            font-size: 0.7em;
+            color: #999;
+            margin-top: 5px;
+        }
+        #message-form {
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1976d2;
+        }
+        #online-users {
+            margin-bottom: 20px;
+            color: #666;
+        }
+        #typing-indicator {
+            color: #666;
+            font-style: italic;
+            height: 20px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Real-time Anonymous Chat</h1>
+    <div id="online-users"></div>
+    <div id="chat-container"></div>
+    <div id="typing-indicator"></div>
+    <form id="message-form">
+        <input type="text" id="message-input" placeholder="Type your message..." required>
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        class ChatSystem {
+            constructor() {
+                // Initialize PubNub
+                this.pubnub = new PubNub({
+                    // Replace these with your PubNub keys
+                    publishKey: 'pub-c-f44533d1-e164-4d33-9232-e7559b568ea1',
+                    subscribeKey: 'sub-c-e41c7757-6dac-4112-93df-8dccece49c65',
+                    userId: uuid.v4().substring(0, 8)
+                });
+
+                this.userId = this.pubnub.userId;
+                this.channelName = 'anonymous-chat';
+                this.messages = [];
+                this.activeUsers = new Set();
+                this.typingTimeout = null;
+                
+                this.initializeUI();
+                this.initializePubNub();
+            }
+
+            initializeUI() {
+                this.messageForm = document.getElementById('message-form');
+                this.messageInput = document.getElementById('message-input');
+                this.chatContainer = document.getElementById('chat-container');
+                this.onlineUsersDiv = document.getElementById('online-users');
+                this.typingIndicator = document.getElementById('typing-indicator');
+
+                this.messageForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.sendMessage();
+                });
+
+                this.messageInput.addEventListener('input', () => {
+                    this.handleTyping();
+                });
+            }
+
+            initializePubNub() {
+                // Subscribe to the chat channel
+                this.pubnub.subscribe({
+                    channels: [this.channelName],
+                    withPresence: true
+                });
+
+                // Set up listeners
+                this.pubnub.addListener({
+                    message: (event) => {
+                        if (event.message.type === 'chat') {
+                            this.handleNewMessage(event.message);
+                        } else if (event.message.type === 'typing') {
+                            this.handleTypingIndicator(event.message);
+                        }
+                    },
+                    presence: (event) => {
+                        this.handlePresence(event);
+                    }
+                });
+
+                // Get chat history
+                this.pubnub.history(
+                    {
+                        channel: this.channelName,
+                        count: 50 // Get last 50 messages
+                    },
+                    (status, response) => {
+                        if (response) {
+                            const messages = response.messages
+                                .map(m => m.entry)
+                                .filter(m => m.type === 'chat');
+                            this.messages = messages;
+                            this.loadMessages();
+                        }
+                    }
+                );
+            }
+
+            handlePresence(event) {
+                if (event.action === "join" || event.action === "state-change") {
+                    this.activeUsers.add(event.uuid);
+                } else if (event.action === "leave" || event.action === "timeout") {
+                    this.activeUsers.delete(event.uuid);
+                }
+                this.updateOnlineUsers();
+            }
+
+            handleTyping() {
+                // Clear existing timeout
+                if (this.typingTimeout) {
+                    clearTimeout(this.typingTimeout);
+                }
+
+                // Publish typing event
+                this.pubnub.publish({
+                    channel: this.channelName,
+                    message: {
+                        type: 'typing',
+                        userId: this.userId,
+                        isTyping: true
+                    }
+                });
+
+                // Set new timeout
+                this.typingTimeout = setTimeout(() => {
+                    this.pubnub.publish({
+                        channel: this.channelName,
+                        message: {
+                            type: 'typing',
+                            userId: this.userId,
+                            isTyping: false
+                        }
+                    });
+                }, 1000);
+            }
+
+            handleTypingIndicator(message) {
+                if (message.userId !== this.userId) {
+                    if (message.isTyping) {
+                        this.typingIndicator.textContent = `User ${message.userId} is typing...`;
+                    } else {
+                        this.typingIndicator.textContent = '';
+                    }
+                }
+            }
+
+            sendMessage() {
+                const content = this.messageInput.value.trim();
+                if (!content) return;
+
+                const message = {
+                    type: 'chat',
+                    id: uuid.v4(),
+                    userId: this.userId,
+                    content,
+                    timestamp: Date.now()
+                };
+
+                // Publish message
+                this.pubnub.publish({
+                    channel: this.channelName,
+                    message
+                });
+
+                this.messageInput.value = '';
+            }
+
+            handleNewMessage(message) {
+                this.messages.push(message);
+                this.loadMessages();
+            }
+
+            loadMessages() {
+                this.chatContainer.innerHTML = '';
+                this.messages.forEach(message => {
+                    const messageDiv = document.createElement('div');
+                    messageDiv.className = `message ${message.userId === this.userId ? 'own' : 'other'}`;
+                    
+                    const userIdDiv = document.createElement('div');
+                    userIdDiv.className = 'user-id';
+                    userIdDiv.textContent = `User ${message.userId}`;
+                    
+                    const contentDiv = document.createElement('div');
+                    contentDiv.textContent = message.content;
+                    
+                    const timestampDiv = document.createElement('div');
+                    timestampDiv.className = 'timestamp';
+                    timestampDiv.textContent = new Date(message.timestamp).toLocaleTimeString();
+                    
+                    messageDiv.appendChild(userIdDiv);
+                    messageDiv.appendChild(contentDiv);
+                    messageDiv.appendChild(timestampDiv);
+                    this.chatContainer.appendChild(messageDiv);
+                });
+                
+                this.chatContainer.scrollTop = this.chatContainer.scrollHeight;
+            }
+
+            updateOnlineUsers() {
+                this.onlineUsersDiv.textContent = 
+                    `Online Users: ${this.activeUsers.size} (You are: User ${this.userId})`;
+            }
+        }
+
+        // Initialize the chat system
+        const chat = new ChatSystem();
+    </script>
+</body>
+</html>
