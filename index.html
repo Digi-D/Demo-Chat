@@ -89,9 +89,24 @@
         <button type="submit">Send</button>
     </form>
 
+    <button onclick="getRandomPhrase()">Get Random Phrase</button>
     <div id="instructions-here">Instructions here</div>
 
     <script>
+
+        const phrases = [
+          "Draw an animal",
+          "Draw a Flemish Wolf",
+          "Drop the bomb. Clear frame.",
+          "Change colors",
+          "Write what you had for breakfast."
+        ];
+        
+        function getRandomPhrase() {
+          const randomIndex = Math.floor(Math.random() * phrases.length);
+          document.getElementById('instructions-here').textContent = phrases[randomIndex];
+        }
+
 
         const instructions_box = document.getElementById('instructions-here');
         
