@@ -89,7 +89,12 @@
         <button type="submit">Send</button>
     </form>
 
+    <div id="instructions-here">Instructions here</div>div>
+
     <script>
+
+        const instructions_box = document.getElementById('instructions-here');
+        
         class ChatSystem {
             constructor() {
                 // Initialize PubNub
@@ -274,6 +279,108 @@
 
         // Initialize the chat system
         const chat = new ChatSystem();
+
+
+        const status = document.getElementById('status');
+        const values = document.getElementById('values');
+        const thresholdSlider = document.getElementById('threshold');
+        const thresholdValue = document.getElementById('thresholdValue');
+        
+        let threshold = 18;
+        let isShaking = false;
+        let lastX = 0, lastY = 0, lastZ = 0;
+        let shakeCooldown = false;
+
+        thresholdSlider.addEventListener('input', (e) => {
+            threshold = parseFloat(e.target.value);
+            thresholdValue.textContent = threshold;
+        });
+
+        function handleMotion(event) {
+            if (!event.accelerationIncludingGravity) {
+                showError("No acceleration data available");
+                return;
+            }
+
+            const { x, y, z } = event.accelerationIncludingGravity;
+            if (x === null || y === null || z === null) return;
+
+            // Update display values
+            values.textContent = `X: ${x.toFixed(1)} | Y: ${y.toFixed(1)} | Z: ${z.toFixed(1)}`;
+
+            // Calculate total acceleration change
+            const deltaX = Math.abs(x - lastX);
+            const deltaY = Math.abs(y - lastY);
+            const deltaZ = Math.abs(z - lastZ);
+            const totalDelta = deltaX + deltaY + deltaZ;
+
+            // Update last values
+            lastX = x;
+            lastY = y;
+            lastZ = z;
+
+            // Check if shaking
+            if (totalDelta > threshold && !shakeCooldown) {
+                if (!isShaking) {
+                    isShaking = true;
+
+                    
+                    instructions_box.innerHTML("was shaken");
+
+                    
+                }
+                
+                // Add cooldown to prevent rapid switching
+                shakeCooldown = true;
+                setTimeout(() => {
+                    shakeCooldown = false;
+                }, 100);
+            } else if (totalDelta <= threshold && !shakeCooldown) {
+                if (isShaking) {
+                    isShaking = false;
+                    status.textContent = "Not shaking";
+                    status.classList.remove('shaking');
+                    status.classList.add('idle');
+                }
+            }
+        }
+
+        function showError(message) {
+            if (!document.querySelector('.error')) {
+                const error = document.createElement('div');
+                error.className = 'error';
+                error.textContent = message;
+                document.querySelector('.container').appendChild(error);
+            }
+        }
+
+        function requestPermission() {
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                DeviceMotionEvent.requestPermission()
+                    .then(permissionState => {
+                        if (permissionState === 'granted') {
+                            window.addEventListener('devicemotion', handleMotion);
+                        } else {
+                            showError("Permission to access accelerometer was denied");
+                        }
+                    })
+                    .catch(error => {
+                        showError("Error requesting motion permission: " + error);
+                    });
+            } else {
+                window.addEventListener('devicemotion', handleMotion);
+            }
+        }
+
+        // Initial setup
+        if (window.DeviceMotionEvent) {
+            requestPermission();
+        } else {
+            showError("Device motion not supported on this device");
+        }
+
+
+        
     </script>
 </body>
 </html>
