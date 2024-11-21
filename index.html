@@ -80,6 +80,9 @@
         #instructions-here {
             margin: 20px;
         }
+        .instructions-block {
+            padding-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -92,8 +95,10 @@
         <button type="submit">Send</button>
     </form>
 
-    <button onclick="getRandomPhrase()">Get Random Phrase</button>
-    <div id="instructions-here">Instructions here</div>
+    <div class="instructions-block">
+        <button onclick="getRandomPhrase()">Get Random Phrase</button>
+        <div id="instructions-here">Instructions here</div>
+    </div>
 
     <script>
 
