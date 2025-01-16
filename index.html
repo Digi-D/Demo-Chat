@@ -43,6 +43,7 @@
         window.getRandomPhrase = function() {
           const randomIndex = Math.floor(Math.random() * phrases.length);
           document.getElementById('instructions-here').textContent = phrases[randomIndex];
+          document.body.style.backgroundColor = '#' + Math.floor(Math.random()*16777215).toString(16);
         }
 
 
