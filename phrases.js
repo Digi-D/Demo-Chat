@@ -29,7 +29,7 @@ const phrases = [
     "Draw a secret object in one frame—conceal it in the next, then reveal it again.",
     "Animate a shape exploding in one frame and reforming in another.",
     "Drop a bomb clear a frame!"
-    
+     
 ];
 
 export default phrases;

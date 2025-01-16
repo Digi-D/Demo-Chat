@@ -11,7 +11,14 @@
     <script type="module" src="phrases.js"></script>
 </head>
 <body>
-    <h1>Drawing Across Borders Chat</h1>
+
+    <div class="instructions-block">
+        <div id="instructions-here">Instructions here</div>
+        <button class="craziness-button" onclick="getRandomPhrase()">Get Instructions</button>
+    </div>
+
+    <h1 class="random-color">Drawing Across Borders Chat</h1>
+
     <div id="online-users"></div>
     <div id="chat-container"></div>
     <div id="typing-indicator"></div>
@@ -20,10 +27,7 @@
         <button type="submit">Send</button>
     </form>
 
-    <div class="instructions-block">
-        <div id="instructions-here">Instructions here</div>
-        <button onclick="getRandomPhrase()">Get Instructions</button>
-    </div>
+
 
     <script type="module">
 
