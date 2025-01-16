@@ -1,0 +1,35 @@
+const phrases = [
+    "Draw a straight border across your frame and decide what it keeps in or out.",
+    "Choose three frames and create a boundary that builds up gradually.",
+    "Draw a limit in one frame that shifts or transforms in the next.",
+    "Animate a wriggling line across multiple frames, altering its direction or shape.",
+    "Choose an odd frame and draw a box that encloses something—then let it escape in the next frames",
+    "Create a border that lets some elements pass while blocking others.",
+    "Draw a boundary with texture—make it hairy, rough, or smooth.",
+    "Choose a frame and hide a secret within the border—then gradually reveal it.",
+    "Divide your frame into east and west with a line that changes over time.",
+    "Draw a path in one frame and turn it into an obstacle by the next.",
+    "Sketch a border that crosses itself, creating a sense of entanglement or confusion.",
+    "Connect two spaces with a line—let it morph into a different shape as it moves.",
+    "Animate a boundary that breathes, expanding and contracting across frames.",
+    "Draw a line that dissolves into nothingness.",
+    "Choose a single frame and create a border that bulges and droops.",
+    "Draw a border that invites crossing—make it open, shift, or transform.",
+    "Divide the frame into north and south and show what separates or connects them.",
+    "Create a movable organic shape—let it grow, shrink, or migrate across frames.",
+    "Draw an animal in one frame and adapt it for a new environment in the next (e.g., add wings, legs, or tools).",
+    "Write what you had for breakfast inside a border, then animate it being erased or replaced.",
+    "Transform the last text message you received into a visual element within your frame.",
+    "Choose a frame and crosshatch part of it—reveal the details gradually in the following frames.",
+    "Create an invasive species crossing a border and transforming its environment.",
+    "Draw a humorous action, like an animal farting to launch itself over a border.",
+    "Sketch an obstacle—let it break apart or shift into something else.",
+    "Draw a chat bubble—let it appear, disappear, or change meaning.",
+    "Create a looped animation where a border disappears and reappears endlessly.",
+    "Draw a secret object in one frame—conceal it in the next, then reveal it again.",
+    "Animate a shape exploding in one frame and reforming in another.",
+    "Drop a bomb clear a frame!"
+    
+];
+
+export default phrases;
